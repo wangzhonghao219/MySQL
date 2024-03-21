@@ -1,0 +1,25 @@
+innoDB磁盘架构
+	1：system tablespace：系统表空间是更改缓冲区的存储区域，如果表是在系统表空间而不是每个表文件或通用表空间中创建的，它也可能包含表和索引数据
+	
+	     参数：innoDB_data_file_path;
+	
+	2：file-per-table  tablespace：每个表的文件表空间包含单个innoDB表的数据和索引，并存储在文件系统上的单个数据文件中
+	
+	     参数：innoDB_file_pre_table
+	
+	3：General  tablespace：通用表空间，需要通过create  tablespace语法创建通用表空间，在创建表时可以指定该表空间
+	
+	eg：create  tablespace   xxx  add  datafile ' '  engine  =  engine_name；
+	
+	4：undo  tablespace：撤销表空间，MySQL实例在创建的时候会自动的创建两个默认的undo表空间（初始大小为16mb），用于存储undo loge日志；
+	
+	5：temporary  tablespace：innoDB使用会话临时表空间和区局临时表空间，存储用户创建的临时表等数据；
+	
+	6：doublewrite buffer  files：双写缓冲区，innoDB引擎将数据页从buffer  pool刷新到磁盘前，先将数据页写入双写缓冲区文件中，便于系统异常时恢复数据；
+		#ib_16384_0.dblwr
+		#ib_16384_1.dblwr
+	
+	7：redo  log：重做日志，是用来实现事务的持久性，该日志文件由两部分组成：重做日志缓冲（redo  log  buffer）以及重做日志文件（redo  log），前者是在内存中，后者是在磁盘中。
+	     	      当日志提交后会把所用的修改都存储在该日志中，用于在刷新脏页到磁盘时，发生错误时，进行数据恢复使用；
+	
+	以循环方式写入重做日志文件，涉及两个文件：ib_logfile0      ib_logfile1
