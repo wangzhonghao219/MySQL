@@ -1,0 +1,70 @@
+SQL优化
+	·插入数据
+		insert  优化
+
+		批量插入
+		insert  into  tb_user  values(1,'tom'),(2,'cat'),(3,'jerry');
+
+		手动提交事务	
+		start  transaction;
+		insert  into  tb_test  values(1,'tom');
+		insert  into  tb_test  values(1,'cat');
+		insert  into  tb_test  values(1,'jerry');
+		commit;
+
+		主键顺序插入： 1 2 3 4  6  88  100  111
+		主键乱序插入： 2 5 7  3 1 55  44
+
+		###大批量插入数据
+
+		#客户端连接服务端时加上   --local-infile
+		mysql  --local-infile  -u  root  -p
+		#设置全局参数local-infile为1，开启从本地加载文件导入的数据开关
+		set  global  local_infile = 1;
+		#执行load指令将准备好的数据加载到表结构中
+		load  data  local  infile '/root/sql1.log'  into  table  'tb_user'  fields  terminated  by  ','  lines  terminated  by  '\n';
+		
+		
+		
+	·主键优化
+		主键设计原则
+
+		·满足业务需求的情况下，尽量降低主键的长度；
+		·插入数据时，尽量选择顺序插入，选择使用auto_increment自增主键
+		·尽量不要使用uuid做主键或者其他自然主键，如身份证号
+		·业务操作时避免对主键的修改
+		create  index  idx_user_age_pho_ad  on  tb_user(age  asc  ,  phone  desc);
+	
+	·order  by  优化
+		#根据age，phone进行一个升序，一个降序
+		explain  select  id,age,phone  from  tb_user  order  by  age  asc,  phone  desc;
+		
+		#创建索引
+		create  index  idx_user_age_phone_ad  on  tb_user(phone  asc,  ad  desc);
+
+	
+	·group by  优化
+
+		目的  extra：  using  temporary（临时表）  --》  using  index
+
+		#创建索引
+		create  index  idx_user_pro_age_sta  on  tb_user(profession,  age,  status);
+
+		#执行分组操作，根据profession字段分组
+		explain  select  profession,  count(*)   from  tb_user  group  by  profession;
+		
+	·limit  优化
+		优化思路：一般分页查询时，通过创建 覆盖索引  能够比较好的提升性能可以通过覆盖查询加子查询的方式进行优化
+		explain  select  *  from  tb_sku  t,  (select  id  from  tb_sku  order  by  id  limit  200000,10)  a  where  t.id  =  a.id;
+
+	·count优化
+
+		count的几种用法 ：  count(主键)，  count（字段），  count（1），  count（*）
+		尽量使用count（*），优化效果最好
+
+	·updata优化
+		尽量根据主键/索引字段进行数据更新
+		innoDB 的行锁是针对索引加的锁，不是针对记录加的锁，并且索引不能失效，否者行锁会升级为表锁；
+
+
+
