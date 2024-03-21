@@ -1,0 +1,194 @@
+存储过程
+	介绍：存储过程是事先经过编译并存储在数据库中的一段SQL语句的集合，调用存储过程可以简化应用开发人员的很多工作，减少数据在数据库和应用服务器之间的传输，对于提高数据处理的效率是有好处的
+	          存储过程的思想很简单，就是###数据库SQL语言层面的代码封装和重用###
+	
+	特点：封装，复用，可以接受参数（in，inout），也可以返回数据（out，inout），减少互联网交互，效率提升；
+	
+	创建：create  procedure  存储过程名称（[参数列表]）		
+	          begin
+		------SQL语句
+	          end;
+	
+	调用：call  名称（[参数]）;
+	
+	展示：show  create  procedure  p1；
+	
+	删除：drop  procedure  id exist  p1；
+	
+	变量：系统变量是MySQL服务器提供，不是用户定义的，属于服务器层面，分为全局变量（global），会话变量（session）；
+	
+	查看系统变量：show  [session  /  global]  variable；   --  查看所有系统变量；
+	                      show  [session  /  global]   variable；  --  可以通过like模糊匹配方式查找变量；
+		      select  @@[session  /  global]  系统变量名  --  查看指定的变量名；
+	
+	设置系统变量名：set  [session  /  global]  系统变量名  =  值；
+		          set  @@[session  /  global]  系统变量名  =  值；
+
+			select  @mycolor  =  ‘red’；
+			select  count（*） into  @mycount  from  tb_user;
+			select  @myname,  @myage,  @mycount;
+		  	
+	注：如果没有指定范围，默认是session，会话变量，mysql服务器重新启动后，所设置的全局变量都会失效，可以在/etc/my.cnf中设置；
+
+	用户自定义变量：是用户根据需要自己定义的变量，用户变量不用提前声明，在用的时候直接用‘@变量名’使用就可以，次作用域为当前连接；
+
+	赋值：set  @var_name  =  expr[  @var_name =  expr];
+	          set  @var_name  :=  expr[  @var_name  =  expr];  -->推荐使用
+
+	          select  @var_name  :=  expr[  @var_name  =  expr];
+	          select  字段名  into  @var_name  from  table;
+	    
+	          使用：select  @var_name;
+	注：用户定义的变量无需对其进行声明或者初始化，只不过获取到的值为nul    --》  set  @var_name ;
+	
+	局部变量：是根据需要定义在局部生效的变量，访问之前需要declare声明，可用作储存过程中的局部变量和输入参数，局部变量的范围是其内声明的begin。。。end块；
+	声明：  declare  变量名  变量类型[  default..  ];
+	
+	eg:  	create  procedure  p1()
+		begin
+			declare  score  int  default  58;
+			declare  result  varchar(10);
+	
+			if  score  >=  85  then
+				set  result  =  'youxiu';
+			else  if...   then
+			else...
+			end  if;
+			
+			select  result;
+		end;
+	
+	参数类型：   in   ，   out    ，   inout；
+	create  procedure  存储过程名称(in/out/inout  参数名  参数类型)
+	
+	eg: 	create  procedure  xxx(  in score  double)
+		begin
+			set  score  :=  0.5  *  score;
+		end;
+	
+		set  @score  =  198;
+		call  xxx(@score);
+		select  @score;
+
+	case语法：  CASE  case_value
+			when  when_value1  then  statement_list1;
+			when  when_value2  then  statement_list2;
+		   end  case;
+
+	eg:	create  procedure  p2(in  mouth  int)	
+		begin
+			declare  result  varchar(10);
+			
+			case
+				when  mouth  >=  1  and  mouth  mouth  <=  3  then
+					set  result  :=  '第一季度';
+				when  ..........
+			end   case;
+		
+			select  concat('您输入的月份为,'    , mouth,  ',所属季度为'  ,  result);
+		end; 
+		
+	while：while 循环是有条件的循环控制语句，满足条件后，在执行循环体中的sql语句；
+		while 条件 do
+			sql逻辑；
+		end  while；
+		
+	create  procedure  xxx(in  n  int)
+	begin
+		declare  total  int  default  0;
+		while  n>0  do				-->  repeat
+			set  total  :=  total  +  n;
+			set  n  :=  n-1;
+		end  while ;				-->  until   n<=0;
+							-->  end  repeat;
+		
+		select  total;
+
+	end;
+	call  xxx(100);   -->  total  =  5050;
+
+	repeat   -->  nutil  条件；  -->  end   repeat;
+	
+	loop：loop实现简单的循环，如果不在sql逻辑中增加退出循环的条件，可以用来实现简单的死循环。loop可以配合以下两个语句使用：
+		
+		leave：  配合循环使用，退出循环；
+		iterate：  必须使用在循环中，作用是跳过当前剩下的语句，直接进入下一次的循环
+	
+	[  begin_label:  ]  loop
+		sol语句；
+	end  loop[  end_label:  ];
+	
+	leave  label;  -->  退出指定标记的循环体；
+	iterate  label;  -->  直接进入下一次的循环；
+	
+	create  procedure  p3(in  n  int)
+	begin
+		declare  total  int  defaut  0;
+		
+		sum:  loop
+			if  n<=0  then
+				leave  sum;
+			end  if;
+	
+			if  n%2  =  1  then
+				set  n  :=  n-1;
+				iterate  sum:
+			end  if;
+	
+		set  total  :=  total  +  n;
+		set  n  :=  n  -  1;
+
+		end  loop  sum;
+		select  total;
+		
+		end;
+
+
+游标（cursor）：游标是用来存储查询结果集的数据类型，在存储过程和函数中可以使用游标对结果集进行循环的处理，游标的使用包括游标的声明，open，fetch，close其语法分别如下
+		
+	声明游标：declare  游标名称  cursor  for  查询语法  ；
+	
+	打开游标：open  游标名称
+	
+	获取游标记录：fetch  游标名称  into  变量[  ,变量  ];
+	
+	关闭游标：close  游标名称；
+	
+	create  procedure  p4(  in  uage  int)
+	begin
+		declare  uname  varchar(100);
+		declare  upro  varchar(100);  
+		declare  u_cursor  cursor  for  select  name,profession  from  tb_user  where  tb_user  where  age  <=  uage;  --先声明变量，后声明游标
+	
+		drop  table  if  exists  tb_user_pro;  --删除表
+		create  table  if  not exists  tb_user_pro(
+			id  int  primary  key  auto_increment;
+			name  varchar(100);
+			profession  varchar(100);
+		);
+	
+		open  u_cursor;
+		while  true  do    --无线循环
+			fetch  u_cursor  into  uname ,  upro;
+			insert  into  tb_usser_pro  valeus(  null  ,   uname  ,  upro  );
+		end  while;
+		
+	end;
+
+	
+条件处理程序（handler）： 可以用来定义在流程控制结构执行过程中遇到的问题时相应的处理步骤，具体语法为  ----------》抛出异常
+	
+	declare  handle_action  handler  for  condition_value[  ,condition_value  ]...  statement;
+	
+	handler_action
+		continue：继续执行当前程序；
+		exit：终止执行当前程序；
+	condition_value
+		SQLTATE  sqlstate_value：状态码，如02000；
+		SQLWARNING：所有以01开头的SQLSTATE的简写；
+		NOT  FOUND：所有02开头的SQLSTATE代码的简写；
+		SQLEXCEPTION：所有没有被SQLWARNING或者NOT  FOUND捕获的SQLSTATE代码的简写；
+
+	eg：  declare  exist  handler  for  SQLSTATE  '02000'  close  u_cursor;
+	
+			
