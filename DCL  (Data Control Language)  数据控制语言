@@ -1,0 +1,35 @@
+DCL  (Data Control Language)  数据控制语言
+一.DCL管理用户:
+	查询用户：
+	USE  mysql;
+	SELECT  *  FROM  user;
+	  
+	创建用户：
+	CREATE  USER  '用户名'@'主机名'  IDENTIFIED  BY  '密码';
+		
+	修改用户密码：
+	ALTER  USER  '用户名'@'主机名'  INENTIFIED  WITH  mysql_native_password  BY  '新密码';
+		
+	删除用户：
+	DROP  USER  '用户名'@'主机名';
+	
+二.DCL权限控制
+	权限：
+	ALL,  ALL  PRIVILEGES	所有权限
+	SELECT
+	INSERT
+	UPDATE
+	DELETE
+	ALTER
+	DROP
+	CREATE
+
+三.DCL权限控制
+	查询权限
+	SHOW  GRANTS  FOR  '用户名'@'主机名';
+	
+	授予权限
+	GRANT  权限列表  ON  数据库名.表名  TO  '用户名'@'主机名';
+	
+	撤销权限
+	REVOKE  权限列表  ON  数据库名.表名  FROM  '用户名'@'主机名';
