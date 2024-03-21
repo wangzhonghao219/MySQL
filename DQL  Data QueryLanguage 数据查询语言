@@ -1,0 +1,15 @@
+DQL  Data QueryLanguage 数据查询语言	
+	SELECT		字段列表
+	FROM		表名列表
+	WHERE		条件列表
+	GROUP  BY	分组字段列表
+	HAVING		分组后条件列表
+	ORDER  BY	排序字段列表
+	LIMIT		分页参数
+	
+	条件查询		WHERE
+	聚合函数		COUNT  MAX  MIN  AVG  SUM
+	分组查询		GROUP  BY
+	排序查询		ORDER  BY
+	分页查询		LIMIT
+	
