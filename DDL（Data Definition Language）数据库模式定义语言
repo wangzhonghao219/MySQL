@@ -1,0 +1,17 @@
+DDL（Data Definition Language）数据库模式定义语言
+
+1.DDL数据库操作
+	SHOW  DATABASES;
+	CREATE  DATABASES  数据库名；
+	USE  数据库名；
+	SELECT  DATABASE();
+	DROP  DATABASE  数据库名；
+
+2.DDL表操作
+	SHOW  TABLE;
+	CREATE  TABLE  数据库名；
+	DESC  表名；
+	SHOW  CREATE  TABLE  表名；
+	ALTER  TABLE  表名  ADD/MODIFY/CHANGE/DROP/RENAME  TO...;
+	DROP  TABLE 表名;
+	
