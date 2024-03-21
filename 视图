@@ -1,0 +1,29 @@
+视图
+	创建
+	create  [  or  replace]  view  视图名称[（列名列表）]  as  select语句  [  with  [ cascaded |  local]  check  option ];
+	
+	查询
+	查看创建视图语句：  show  create  view  视图名称；
+	查看视图数据：  select  *  from  视图名称；
+		
+	修改
+	方法一：  or  replace
+	方法二：  alter  view  视图名称[（列名列表）]  as  select语句  [  with  [ cascaded |  local]  check  option ];
+		
+	删除
+	drop  view  [  if  exists  ]  视图名称
+	
+	视图的检查选项
+	当使用with  check  option  子句创建视图时，MySQL会通过视图检查正在更改的每个行，以使其符合视图的定义，MySQL允许基于另外一个视图创建视图，他还会检查依赖视图中的规则一保持一致性，
+	为了确定检查的范围，mysql提供了两个选项，cascaded和local，默认值为cascaded
+
+	若包含下列任何一项，则视图不可更新
+	·聚合函数或者窗口函数
+	·distinct
+	·group  by
+	·having
+	·union或者union  all
+
+	视图的作用：
+		
+	简单，安全，数据独立；
