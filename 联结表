@@ -1,0 +1,49 @@
+一.联结表
+	@联结：SQL最强大的功能之一就是能在数据查询的执行中联结（join）表，联结是利用SQL的SELECT能执行的最重要的操作，联结是一种机制，用来在一条SELECT语句中关联表，称为联结
+	@关系表：关系表的设计就是要把信息分解成多个表，一类数据一个表，各类数据通过某些共同的值相互关联（关系数据库），关系数据可以有效储存，方便的处理，具有伸缩性（scale）
+	
+二.创建联结
+	创建联结非常简单，指定要联结的所有表以及关联他们的方式即可
+	1.  SELECT  vend_id,  prod_name,  prod_price  FROM  Vendors,  Products  WHERE  Vendors.vend_id  =  Products.vend_id;  --匹配的两列需要完全限定名
+注：WHERE子句作为过滤条件，只包含那些匹配的给定条件（这里指联结条件）的行，没有WHERE子句，第一个表中的第一行将与第二个表中的第一行进行配对，而不管是否逻辑上能否匹配在一起
+	笛卡尔积：由没有联结条件的表关系返回的结果称为笛卡尔积，检索出的行的数目将是有第一个表中的行数乘以第二个表中的行数，有时返回的笛卡尔积的联结又称叉联结（cross  join）
+
+	内联结（inner  join）或等值联结（equijoin）  INNER  JOIN  ...  ON  操作符
+	2.  SELECT  vend_name,  prod_name,  prod_price  FROM  Vendors  INNER  JOIN  Products  ON  Vendors.vend_id  =  Products.vend_id;	
+
+	联结多个表
+	3.  SELECT  prod_name,  vend_name,  prod_price,quantity  FROM  OrderItems,  Products,  Vendors  WHERE  Products.vend_id  =  Vendors_id  
+		AND  OrderItems.prod_id  =  Products.prod_id
+		AND  order_num   =  20007;
+
+二.创建高级联结
+	使用表别名（优点：@缩短SQL语句  @允许在一条SELECT语句中多次使用相同的表）	
+	1.  SELECT  cust_name,  cust_contact  FROM  Customers  AS  C,  Orders  AS  O,  OrderItems  AS  OI  
+		WHERE  C.cust_id  =  O.cust_id
+		AND  OI.order_num  =  O.order_num
+		AND  prod_id  =  'RGAN01';
+注：###表别名不返回客户端###
+	
+	使用不同类型的联结
+	三种联结：  @自联结（self-join）  @自然联结（natural  join）  @外联结（outer  join）
+
+	@自联结
+	2.  SELECT  C1.cust_id,  C1.cust_name,  C1.cust_contact  FROM  Customers  AS  C1,  Customers  AS  C2  WHERE  C1.cust_name  =  C2.cust_name
+		AND  C2.cust_contact  =  'Jim  Jones';  --自联结 = 自己联结自己（表），等效子查询，减少代码量，且多数DBMS处理联结的速度比处理子查询的速度要快
+		
+	@自然联结（排除多次出现，每一列只返回一次）
+	3.  SELECT  C.*,  O.order_num,  O.order_date,  OI.prod_id,  OI.quantity,  OI.item_price  FROM  Customers  AS  C,  Orders  AS  O,  OrderItems  AS  OI
+		WHERE  C.cust_id  =  O.cust_id  
+		AND  OI.order_num  =  O.order_num
+		AND  prod_id  =  'RGAN01';
+注：自然联结要求你只能选择那些唯一的列，一般通过对一个表是有用通配符，而对其他表的列使用明确的子集来完成
+	
+	@外联结（###处理没有关联行的那些行###）  LEFT  OUTER  JOIN   ...   ON操作符
+	4.  SELECT  Custmers.cust_id,  Orders.order_num  FROM  Customers  INNER  JOIN  Orders  ON  Customers.cust_id  =  Orders.order_id;  --内联结
+	=>SELECT  Cutomers.cust_id,  Orders.order_num  FROM  Customers  LEFT  OUTER  JOIN  Orders  ON  Customers.cust_id  =  Orders.cust_id;  --左联结
+	5.  SELECT  Cutomers.cust_id,  Orders.order_num  FROM  Customers  RIGHT  OUTER  JOIN  Orders  ON  Customers.cust_id  =  Orders.cust_id;  --右联结
+注：还有一个全外联结FULL  OUTER  JOIN  由于MySQL不支持，所有不给出实例
+
+	使用带聚集函数的联结
+	6.  SELECT  Customers.cust_id,  COUNT(Orders.order_num)  AS  num_ord  FROM  Customers
+		INNER  JOIN  Orders  ON  Customers.cust_id  =  Orders.cust_id  GROPU  BY  Customers.cust_id;
