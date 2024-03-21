@@ -1,0 +1,71 @@
+一. SQL  SELECT
+	1. SELECT  prod_name  FROM  products;  --检索单个列
+	2. SELECT  prod_name,  prod_price,  prod_id  FROM  products;  --检索多个列
+	3. SELECT  *  FROM  products;  --检索所有列
+	
+	DISTINCT检索不同值
+	4. SELECT  DESTINCT  prod_name  FROM  products;  --检索不同的值，主键唯一性，抽离
+
+	WHERE && LIMIT限制结果
+	5.  SELECT  prod_name  FROM  products  WHERE  ROWNUM  <=5;  --只取前五行(Oracle)
+	6.  SELECT  prod_name  FROM  products  LIMIT  5;  --DBMS返回不超过五行数据(MySQL, MariaDB, SQLite)
+	7.  SELECT  prod_name  FROM  products  LIMIT  5  OFFSET  3;  --DBMS返回从第三行起的五条数据
+                =>SELECT  prod_name  FROM  products  LIMIT  3,5;
+
+	ORDER BY排序数据，保证是SELECT的最后一条子句
+	8.  SELECT  prod_name  FROM  products  ORDER  BY  prod_name;  --以字母顺序排序ABCDEFG,同列数字大小
+	9.  SELECT  prod_id,  prod_price,  prod_name  FROM  products  ORDER  BY  prod_price,  prod_name;  --检索3列排序2列，先按价格后按名称
+	=>  SELECT  prod_id,  prod_price,  prod_name  FROM  products  ORDER  BY  2,3;  --检索列的相对位置进行排序
+	10.  SELECT  prod_id,  prod_price,  prod_name  FROM  products  ORDER  BY  prod_price  DESC,  prod_name;  --降序排列(DESC),升序排列(ASC),默认升序排列
+	
+	WHERE过滤数据,在FROM之后给出
+	11.  SELECT  prod_name,  prod_price  FROM  prodects  WHERE  prod_proce  =  3.1415;  --检索两列，返回价格为3.1415的行
+	12.  SELECT  prod_name,  prod_id  FROM  prodecst  WHERE  prod_id  <>  'DLL01';  --不匹配检查，<>可和!=互换
+	13.  SELECT  prod_name.  prod_id  prod_price  FROM  prodects  WHERE  prod_price  BETWEEN  5  AND  10;  --范围性检查
+	14.  SELECT  prod_name  FROM  prodects  WHERE  prod_id  IS  NULL;  --返回prod_id为空值的人名，空值检测
+	
+	组合WHERE,  IN,  NOT  高级数据过滤  操作符(operater):  AND  OR  
+	优先级  (  )  >  AND  >  OR
+	15.  SELECT  prod_name,  prod_id,  prod_price  FROM  products  WHERE  prod_id  =  'DLL01'  AND  prod_price  <=  4;  --检索满足所有给定条件的行
+	16.  SELECT  prod_name,  prod_price  FROM  products  WHERE  prod_id  =  'DLL01'  OR  prod_id  =  'BRS01';  --满足任一条件即可
+	17.  SELECT  prod_name,  prod_price  FROM  products  WHERE  prod_id  =  'LDD01'  OR  'SOR01'  AND  prod_price  <=   10;  --操作符的组合使用
+	18.  SELECT  prod_name,  prod_price  FROM  products  WHERE  (prod_id  =  'LDD01'  OR  prod_id  =  'SOR01')  AND  prod_price  >=  10;  --优先级处理
+	19.  SELECT  prod_name,  prod_price  FROM  products  WHERE  vend_id  IN  ('LDD01' , 'SOR01')  ORDER  BY  prod_name;  --IN的使用，和OR对比速度更快，优化
+	20.  SELECT  prod_name,  prod_price  FROM  products  WHERE  NOT  vend_id  =  'LDD01'  ORDER  BY  prod_name;  --NOT否定其后的条件
+	=>  SELECT  prod_name,  prod_price  FROM  prodcuts  WHERE  vend_id  <>  'LDD01'  ORDER  BY  prod_name;
+
+二.SQL通配符(wildcard)进行过滤  LIKE操作符  
+	百分号(%)通配符
+	1.  SELECT  pro_id,  prod_name  FROM  Proddcts  WHERE  prod_name  LIKE  'Fish%';  --检索任意Fish起头的词，%告诉DBMS接受Fish之后的任意字符
+	2.  SELECT  prod_name,  prod_id  FROM  products  WHERE  prod_name  LIKE  '%Fish%';  --检索任意位置上包含Fish的值，通配符可放任意位置
+	
+	下划线( _ )通配符,用途和%一样，但只匹配单个字符，一个_代表一个字符
+	3.  SELECT  prod_id,  prod_name  FROM  products  WHERE  prod_name  LIKE  '__  inch  teddy  bear';  
+	
+	方括号通配符([ ])通配符,用来指定一个字符集，必须匹配指定位置
+	4.  SELECT  prod_name,  prod_id  FROM  products  WHERE  prod_name  LIKE  '[JM]%'  ORDER  BY  prod_name;  --找出所有名字一M和J开头的联系人
+	
+	前缀字符脱字号(^)用来表示否定
+	5.  SELECT  prod_name,  prod_id  FROM  products  WHERE  prod_name  LIKE  '[^JM]'  ORDER  BY  prod_id;  --找出所有名字不以J和M开头的联系人
+	=>SELECT  prod_name,  prod_id  FROM  products  WHERE  NOT  prod_name  LIKE  '[JM]'  ORDER  BY  prod_id;  
+注：1.不要过度使用通配符，能使用操作符替代就用操作符，因为通配符操作要耗费更多时间
+       2.尽量不要把通配符放到搜索模式的开始处，这样搜索起来是最慢的
+
+三.创建计算字段field（运行时在SELECT语句内创建的）
+	拼接（concatenate）除MySQL和MariaDB外用+或者 | | ,该拼接方式只返回结果，而并不产生新的列，以至于不能应用在客户端上
+	1.  SELECT  prod_name  +  prod_id  FROM  products  ORDER  BY  prod_name;  --将prod_name和prod_id两列拼接起来
+	2.  SELECT  prod_name  | |  prod_id  FROM  products  ORDER  BY  prod_name;  
+	3.  SELECT  prod_name  +  '{'  +  prod_id  +  '}'  FROM  products  ORDER  BY  prod_name;  --return  prod_name {prod_id}
+	在### MySQL ### 和MariaDB 中必须使用函数 Concat()
+	4.  SELECT  Concat( prod_name,  prod_id)  FROM  products  ORDER  BY  prod_name;
+	5.  SELECT  Concat(prod_name,  '{',  prod_id,  '}')  FROM  products  ORDER  BY  prod_name;
+	在SQL中如果想要去掉select返回的空格，可以使用RTRIM()函数, RTRIM函数是去掉值右边所有空格，TRIM是去掉左边所有空格
+	6.  SELECT  RTRIM(prod_name)  +  '{'  +  RTRIM(prod_id)  +  '}'  FROM  products  ORDER  BY  prod_name;
+
+	使用别名（alias）别名是一个字段或者值的替换名，用AS关键字赋予，最佳实践，也叫导出列
+	7.  SELECT  RTRIM(vend_name)  +  '('  +  RTRIM(vend_country)  +  ')'  AS  vend_title  FROM  Vendors  ORDER  BY  vend_name;  -- 产生新的由拼接来的列vend_title
+	###mysql###
+	8.  SELECT  Concat(vend_name,  '(',  vend_country,  ')')  AS  vend_title  FROM  vend_title  ORDER  BY  vend_name;  --创建一个包含指定计算结果名为vend_title的计算字段
+
+	执行计算技术 + - * /
+	9.  SELECT  prod_id,  quantity,  item_price,  quantity*item_price  AS  expanded_price  FROM  OrderItems  WHERE  order_num  =  4113;  --产生新的计算列
