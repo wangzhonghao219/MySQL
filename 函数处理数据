@@ -1,0 +1,82 @@
+一.SQL  function（）函数处理数据
+	1.  提取字符串组成部分  SUBSTRING()
+	2.  数据类型转换  CONVERT()
+	3.  获取当前日期  DATE()
+注：SQL函数是不可移植的，即所编写的SQL代码不可以在多个系统上运行
+
+            @文本处理函数  RTRIM()去掉右边所有空格  ，  UPPER()将文本转换为大写
+	4.  SELECT  vend_name,  UPPER(vend_name)  AS  vend_name_upcase  FROM  Vendors  ORDER  BY  vend_name;
+	常用文本处理函数
+	LEFT() （或使用子字符串函数）		 	 返回字符串右边的
+	LENGTH()  （也使用DATEENGTH()或LEN()）	 返回字符串的长度
+	LOWER()					 将字符串转换为小写
+	LTRIM()					 去掉字符串右边的空格
+	RIGHT()（或使用子字符串函数）			 返回字符串左边的空格
+	SUBSTR()或SBUSTRING()			 提取字符串的组成部分
+                SOUNDEX()   				 返回字符串的###SOUNDEX###值
+注：SOUNDEX是一个将任何文本字符串转换为描述其语言表示的字母数字模式的算法，能使字符串进行发音比较
+	5.  SELECT  cust_name,  cust_contact  FROM  Customer  WHERE  SOUNDEX(cust_name)  =  SOUNDEX(' Micheal  Green ');  --发音相似即SOUNDEX值匹配
+	
+            @日期处理函数（可移植性很差）
+	SQL Server  -->  DATEPART()
+	6.  SELECT  order_num  FROM  Orders  WHERE  DATEPART(yy,  order_date)  =  2020;  --yy代表年份，所以该例子中DATEPART()只能从order_date中返回年份
+	
+	PostgerSQL  -->  DATE_PART()
+	7.  SELECT  order_num  FROM  Orders  WHERE  WHERE  DATE_PART('year',  order_date)  =  2022;
+	
+	Oracle  PostgerSQL  -->   EXTRACT()
+	8.  SELECT  order_num  FROM  Orders  WHERE  EXTRACT(year  FROM  order_date)  =  2022;
+
+	Oracle  -->  to_date
+	9.  SELECT  order_num  BETWEEN  to_date('2020-01-01',  'yyyy-mm-dd')  AND  to_date('2020-12-31',  'yyyy-mm-dd');
+	
+	###MySQL### & MariaDB & DB2  -->  year()
+	10.  SELECT  order_num  FROM  Orders  WHERE  YEAR(order_date)  =  2020; 
+ 
+             @数值处理函数
+	ABS()			返回一个数的绝对值
+	COS()			返回一个角度的余弦
+	EXP()			返回一个数的指数值
+	PI()			返回圆周率π的值
+	SIN()			返回一个角度的正弦
+	SQRT()			返回一个数的平方根
+	TAN()			返回一个角度的正切
+
+二.汇总数据SQL  function()
+	聚集函数（aggregate  function）  对于某些运行的函数，计算并运行返回一个值
+	AVG()			返回某列的平均值
+	COUNT()			返回某列的行数，计数函数
+	MAX()			返回某列的最大值
+	MIN()			返回某列的最小值
+	SUM()			返回某列值之和
+	1.  SELECT  AVG(prod_price)  AS  avg_price  FROM  Products  WHERE  vend_id  =  'DDL01';  --只用于单列，忽略列值为NULL的行	
+	2.  SELECT  COUNT(*)  AS  num_cust  FROM  Customers;  --计数表中所有的值，不管列表中包含的是空值还是非空值
+	3.  SELECT  COUNT(cust_email)  AS  num_cust  FROM  Customers;  --计数具有电子邮件地址的客户数量，如果指定列名，则忽略NULL的行
+	4.  SELECT  SUM(item_price  *  qunatity)  AS  total_price  FROM  OrderItems  WHERE  order_num  =  20005;
+		
+	聚集不同的值（ALL为默认行为）DISTINCT()
+	5.  SELECT  AVG(DISTINCT  prod_price)  AS  avg_price  FROM  Products  WHERE  prod_id  =  'DLL01';  --DISTINCT不能用于count（）
+
+	组合聚集函数
+	6.  SELECT  COUNT(*)  AS  num_item,
+		  MIN(prod_price)  AS  price_min,
+		  MAX(prod_price)  AS  price_max,
+		  AVG(prod_price)  AS  price_avg  FROM  Products; 
+
+	案例：通过数据库的函数，生成一个六位数的随机验证码
+	SELECT  LPAD(ROUND(RAND())  *  1000000),  6,  '0');
+	LPAD（   ， ）  --> 左边添加指定字符串
+	RPAD(    ,    )  -->  右边添加指定的支付串
+
+三.流程函数
+	IF(value,  T  ,  F  );
+
+	IFUNLL(value1  ,  value2  );  -->   如果value1补位空，返回value1，否则返回value2
+
+	CASE  WHEN  [value1]  THEN  [res1]   ...  ELSE[  default  ]  END  COMMENT  '';     -->   COMMENT注释操作符，如果val1位true，这返回res1，否者返回默认值
+
+	CASE  [expr]  WHEN  [val1]  THEN  [  res1  ]  ...  ELSE  [  default  ]  END;  -->  如果expr的值等于val1则返回res1，否者返回默认值
+	
+	案例：
+	1.  SELECT  name，(  CASE  workaddress  WHEN  '北京'  THEN  '一线城市'  WHEN  '上海'  THEN  '一线城市'  ELSE  '二线城市'  END)  AS  '工作地址'；
+	
