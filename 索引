@@ -1,0 +1,155 @@
+一.  索引简介：
+	索引（index）是帮助MySQL高效获取数据的数据结构（有序）。在数据外，数据库系统还维护着满足特定查找算法的数据结构，这些数据结构以某种方式指向数据，这样就可以在这些
+	数据结构上实现高级查找算法，这种###数据结构就是索引###        
+	
+	索引（index）  --》   数据结构
+
+	数据结构  --》  B-Tree ,    二叉树，   红黑树（B-Tree），  ###  B+TREE  ###
+
+	索引的优缺点：
+
+	优点：	提高数据检索的效率，降低数据库的I/O成本；
+		通过索引列队数据进行排序，降低数据排序的成本，降低CPU的消耗；
+	
+	缺点：	索引列也是要占用空间的
+		索引大大提高了 查询效率，同时也降低了更新表的速度，如对表进行INSERT,UPDATE,DELETE时，效率降低；
+
+二叉树的缺点：顺序插入时，会形成一个链表，查询性能大大降低，大数据量情况下，层次较深，检索速度慢；
+
+红黑树：大数据量的情况下，层级较深，检索速度慢；
+
+B+Tree：MySQL索引数据结构对B+Tree进行优化，在原B+Tree的基础上，增加一个指向相邻叶子节点的链表指针，就形成了带有顺序指针的B+Tree，提高区间访问的性能；
+
+Hash：哈希索引就是采用了一定的哈希算法，将键值对换算成新的hash值，映射到相应的槽位上，然后存储到hash表中，如果有两个或者多个键值对，映射到同一个槽位上，
+           就产生了hash冲突，也叫hash碰撞，可以通过链表来解决；
+
+###为什么InnoDB存储引擎选择使用 B+Tree索引结构：
+	·相对于二叉树，层级更少，搜索效率高；
+	·对于B-Tree，无论是叶子结点还是非叶子节点，都会保存数据，这样导致一页中存储的键值减少，指针也减少，要同样保存大量数据，只能增加树的高度，导致性能降低；
+	·相对hash索引，B+Tree支持范围匹配和排序操作；
+	
+
+二.  索引分类
+	在InnoDB存储引擎中，根据索引的存储形式，可以分为以下两种：
+	聚集索引：将数据存储与索引放到一块，索引结构的叶子节点保存了行数据；  index  --》  PRIMARY  KEY  --》  ROW
+
+	二级索引：将数据和索引分开存储，索引结构的叶子节点关联的是对应的主键；   index  --》  字段  --》  PRIMARY  KEY
+	
+	聚集索引的选取规则：  主键  --》  唯一（UNOQUE）索引  --》自动生成rowid作为隐藏的聚集索引
+	
+	聚集索引：
+	SELECT  *  FROM  user  WHERE  user_id  =  '4113';
+
+	二级索引：
+	SELECT *  FROM  user  WHERE  name  =  'wzh';      --》 回表查询  --》 聚集索引  --》  user_id  --》  row
+
+假设一行数据大小为1K，一页中可以存储16行这样的数据，一个指针占用6个字节空间，主键为bigint，占用8字节，则InnoDB索引的B+Tree存储多少键值
+	高度为2
+	n*8  +  （n+1）*6  =  16*1024  =》  n = 1170
+	1170  *  16  =  18736
+	
+	高度为3
+	1171  *  1171  *  16  =  21939856
+	
+三.  索引的创建
+	1.  name字段可能重复，创建索引
+	CREATE  INDEX  idx_user_name  ON  tb_user(name);
+
+	2.  phone字段非空且唯一，创建唯一索引
+	CREATE  UNIQUE  INDEX  idx_user_phone  ON  tb_user(phone);
+	
+	3.  profession,  age,  status创建联合索引
+	CREATE  INDEX  inx_user_pro_age_sta  ON  tb_user(profession,age,status);
+	
+	4.  为email创建合适的索引
+	CREATE  INDEX  idx_email  ON  tb_user(email);
+
+四.  SQL性能分析
+	1.  SQL执行频次：  show  [  session  /  global  ]  status;   通过该指令可以看到当前数据库INSERT  ,  SELECT  ,  UPDATE  ,  DELATE的执行频次
+	 
+	2.  慢日志查询
+		开启慢日志的开关：
+		slow_query_log  =  1;
+		
+		设置慢日志的时间为2秒，超过两秒视为慢查询，记录在日志中
+		long_query_time  =  2;
+	
+		查看慢日志记录信息：，
+		/var/lib/mysql/localhost-slow.log
+		
+	3.  profile详情
+		show  profiles能够在做SQL优化时帮助我们了解时间都耗费到哪里去了同伙，通过have_profiling参数，可以看到当前的MySQL是否支持profile操作
+		SELECT  @@have_profiling；
+		set profiling=1;  				//打开分析
+ 
+		run your sql1;
+ 
+		run your sql2;
+ 
+		show profiles;					//查看sql1,sql2的语句分析
+ 
+		show profile for query 1;		//查看sql1的具体分析
+ 
+		show profile ALL for query 1;	//查看sql1相关的所有分析【主要看i/o与cpu,下边分析中有各项意义介绍】
+ 
+		set profiling=0;  				//关闭分析
+
+	4.  explain执行计划
+		EXPLAIN或者DESC命令获取MySQL如何执行SELECT语句的信息，包括在SELECT语句执行的过程中如何表达连接和连接顺序
+		直接在SELECT语句上面加上EXPLAIN关键字
+		EXPLAIN  SELECT  字段列表  FROM  表名  WHERE  条件；
+		
+		explain执行计划各字段的含义：
+		
+		1.  key  ：  实际使用的索引，如果为null，则没有使用索引
+		2.  key_len  ：  表示索引中使用的字节数
+		3.  rows  ：  MySQL认为必须要使用的执行查询的行数
+		4.  filtered  ：  表示返回结果的行数占需读取行数的百分比，filtered的值越大越好
+		5.  type  ：  依次从最优到最差分别为：system > const > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > ALL
+		
+五.  索引的使用
+	1.  最左前缀法则
+		如果采取联合索引，要遵守最左联合法则，是指查询从索引的最左列开始，并且不跳过索引中的列，如果跳过某一列则索引部分失效；
+	
+	2.  范围查询
+		联合索引中，出现范围查询（>  <）,范围查询失效，>=正常
+	
+	3.  索引列运算
+		在索引列上进行运算操作，索引将失效
+	
+	4.  字符串不加引dis号
+		字符串类型字段使用中，不加引号索引失效；
+	
+	5.  模糊查询
+		如果只是尾部模糊，则索引不会失效，如果头部模糊查询，则索引失效；
+	
+	6.  or链接的条件
+		用or分割开的条件，若or前的条件中有索引，后面列中没有，这涉及的索引都会失效
+
+	7.  数据分布影响
+		如果MySQL评估使用索引比全表更慢，则不使用索引；
+	
+	8.  SQL提示
+		SQL提示是优化数据库的一个重要手段，就是在SQL语句中添加一些人为的提示达到优化目的；
+		use  index   （）；    
+		explain  select  *  from  use  index(idx_use_pro)    where  profession  =  '软件工程';
+	
+		ignore  index();  --不用某种索引
+		force  index();  --只能用这种索引
+
+	9.  覆盖索引
+		尽量使用覆盖索引--》查询返回的列在索引中可以全部找到   ###减少  select*
+		--》  除去   回表查询
+		
+		查看explain中的extra列
+		若有using  index  condition  --》  查找使用了索引，但是需要回表查询
+		若有using  where；  using  index  --》  使用了索引，但是没有回表查询
+	
+	10.  前缀索引
+		当字段类型为字符串（varchar，  text）  时，有时候需要索引很长的字符串，这会让索引变得很大，查询时浪费磁盘I/O，影响查询效率，可以建立一部分前缀，建立索引
+		语法：
+		select  index  idx_xxx  on table_name(column(n));
+	
+		前缀长度：可以根据索引的选择性来决定，而选择性是指不重复的索引列（基数）和数据表的记录总数的比值，索引选择性越高择查询效率越高
+			select  count(distinct  email)/count(*)  from  tb_use;
+			select  count(distinct  substring(email,1,5))/count(*)  from  tb_user;
