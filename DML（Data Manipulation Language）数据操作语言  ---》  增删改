@@ -1,0 +1,74 @@
+DML（Data Manipulation Language）数据操作语言  ---》  增删改
+
+一.插入数据  INSERT操作符  INTO关键字
+	INSERT用来将行插入（或添加）到数据库表
+	插入方式：@插入完整的行
+		@插入行的一部分
+		@插入某些查询结果
+	
+	@插入完整行
+	1.  INSERT  INTO  Customers
+	     VALUES(1000000006,  'Toy  Land',  '123  any  Street',  'New  York',  'NY',  '11111',  'USA',  NULL,  NULL);  --编写依赖于特定的SQL语句很不安全，表机构变化这该语句作废
+	优化：
+	2.  INSERT  INTO  Customers(cust_id,  cust_name,  cust_address,  cust_city,  cust_state,  cust_zip,  cust_country,  cust_contact,  cust_email)
+	     VALUES(1000000006,  'Toy  Land',  '123  any  Street',  'New  York',  'NY',  '11111',  'USA',  NULL,  NULL);  --即使表的结构改变，这条语句依旧能够工作
+注：若给出列名，则不按照特定次序结果依然正确，保证VALUES的数目必须正确
+		
+	@插入部分行（条件：该列允许NULL 值，无值或空值，或在表定义中给出默认值）
+	3.  INSERT  INTO  Customers(cust_id,  cust_name,  cust_address,  cust_city,  cust_state,  cust_zip,  cust_country)
+	     VALUES(1000000006,  'Toy  Land',  '123  any  Street',  'New  York',  'NY',  '11111',  'USA');
+
+	@插入检索出的数据（INSERT  -->  SELECT）
+	4.  INSERT  INTO  Customers(cust_id,  cust_name,  cust_address,  cust_city,  cust_state,  cust_zip,  cust_country,  cust_contact,  cust_email)
+	     SELECT  cust_id,  cust_name,  cust_address,  cust_city,  cust_state,  cust_zip,  cust_country,  cust_contact,  cust_email  FROM  CustNew;
+	     INNER  SELECT  从CustNew的表中读取数据并插入到Customers表  ==》数据导入
+注：INNER  SELECT  中SELECT语句可以包含WHERE子句，以过滤插入的数据
+	
+	从一个表复制到另一个表
+	5.  CREATE  TABLE  CustCopy  AS  SELECT  *  FROM  Customers;
+	6.  SELECT  *  INTO  CustCopy  FROM  Cutomers;
+
+二.更新与删除数据
+	@更新（修改）数据  UPDATE
+	两种使用UPDATE的方式:  @更新表中的特定行
+			      @更新表中的所有行
+	1.  UPDATE  Customers  SET  cust_email  =  '2198458209@qq.com'  WHERE  cust_id  =  1000000005;
+	2.  UPDATE  Customers  SET  cust_contact  =  'Sam  Roberts',  cust_email  =  '2198458209@qq.com'  WHERE  cust_id  =  1000000005;
+	要删除某个列的值，可设置它为NULL
+	3.  UPDATE  Customers  SET  cust_email  =  NULL  WHERE  cust_id  =  202013870048;
+	
+	@删除数据  DELETE
+	两种删除（去掉）数据，使用DELETE语句:  @从表中删除特定的行
+				              @从表中删除所有行
+	4.  DELETE  FROM  Customers  WHERE  cust_id  =  202013870048;
+注：###DELETD不删除表本身
+
+三.创建和操作表
+	创建表  CREATE  TABLE
+	1.  CREATE  TABLE Products
+	     (
+		prod_id		CHAR(10)		NOT  NULL,
+		vend_id		CHAR(10)		NOT  NULL,
+		prod_name 	CHAR(254)	NOT  NULL,
+		prod_price	DECIMAL(8,2)	NOT  NULL,
+		prod_desc		VARCHAR(1000)	NULL
+	     );
+
+	指定默认值  DEFAULT
+	2.  CREATE  TABLE Products
+	     (
+		prod_id		CHAR(10)		NOT  NULL,
+		vend_id		CHAR(10)		NOT  NULL,
+		prod_name 	CHAR(254)	NOT  NULL,
+		prod_price	DECIMAL(8,2)	NOT  NULL	DEFAULT  1.010,
+		prod_desc		VARCHAR(1000)	NULL
+	     );
+	
+	更新表  ALTER  TABLE
+	ALTER  TABEL  Vendors  ADD  vend_phone  CHAR(10);
+	ALTER  TABLE  Vendors  DROP  COLUMN  vend_phone;
+	
+	删除表  DROP  TABLE
+	DROP  TABLE  CustCopy;  --不能撤销，永久删除该表
+		
+	重命名表  RENAME
