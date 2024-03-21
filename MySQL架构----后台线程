@@ -1,0 +1,15 @@
+MySQL架构----后台线程
+	1：master  thread
+	核心后台线程，负责调度其他线程，还负责将缓冲池中的数据异步刷新到磁盘中，保持数据的一致性，还包括脏页的刷新，合并插入缓存，undo页的回收；
+	
+	2：IO  thread：在innoDB引擎中使用了AIO来处理IO请求，这样可以极大的提高数据库的性能，而IO thread主要负责这些IO的回调
+	
+	线程类型			默认个数			职责
+	read  thread		4			负责读操作
+	write  thread		4			负责写操作
+	log  thread		1			负责将日志缓冲区刷新到磁盘
+	insert  buffer  thread		1			负责将写缓冲区内容刷新到磁盘
+	
+	3：purge  thread：主要用于回收事务语句提交了的undo  log，在事务提交之后，undo  log可能不用了，就用它回收；
+	
+	4：page  cleaner  thread：协助master  thread刷新脏页到磁盘的线程，它可以减轻master  thread的工作压力，减少阻塞；
