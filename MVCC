@@ -1,0 +1,38 @@
+MVCC（多版本并发控制）
+
+	当前度：读取的是记录的最新版本，读取时还要保证其他事务不能修改当前的记录，会对读取的记录进行加锁，对于日常操作，如：select...lock  in share  mode（共享锁）或者排他锁都是当前读；
+	
+	快照读：简单的select（不加锁）就是快照读，快照读读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读
+		·read  committed：每次select都会生成一个快照读  -->脏读
+		·repeatable  read：开启事务后第一个select语句才是快照读的地方
+		·serializable（串行化）：快照读会退化为当前读；
+	
+	MVCC：全程multi-version  concurrency  control，多版本并发控制，指维护一个数据的多个版本，使得读写操作没有冲突，快照读为MySQL实现MVCC提供了一个非阻塞读的功能，MVCC的具体实现
+	             还依赖于数据库记录中的 三个隐式字段  undo  log日志  readview；
+	
+	
+记录中的隐藏字段
+	隐藏字段			含义
+	DB_TRX_ID		最近修改事务的id，记录插入这条记录或最后一次修改该记录的事务id
+	DB_ROLL_PTR		回滚指针，指向这条记录的上一个版本，用于配合undo  log，指向上一个版本
+	DB_ROW_ID		隐藏主键，如果表结构没有主键，将会产生该隐藏字段
+
+undo  log
+	回滚日志，在insert，update，delete的时候产生便于数据回滚的日志；
+	当insert的时候，产生的undo  log日志只需要在回滚的时候需要，在事务提交之后，可立即被删除
+	而update，delete的时候产生的undo  log日志不仅在回滚时需要，在快照读的时候也需要，不会立即被删除
+	
+readview
+	readview读视图是快照读sql执行时MVCC提取数据的依据，记录并维护系统当前活跃的事务（未提交的）id
+	readview包含了四个字段
+	字段			含义
+	m_ids			当前活跃的事务id集合
+	min_trx_id			最小活跃事务id
+	max_trx_id		预分配事务id，当前最大事务ID+1（因为id是自增的）
+	creator_trx_id		readview创建者的事务id
+	
+	版本链数据访问规则
+	1.  trx_id ==  creator_trx_id?  可以访问该版本-->说明数据是当前事务更改的
+	2.  trx_id  <  min_trx_id?  可以访问该版本-->说明数据已经提交
+	3.  trx_id  >  max)yrx_id?  可以访问该版本-->说明事务是在readview生成后开启的
+	4.  min_trx_id  <=  trx_id  <=  max_trx_id?  如果trx_id不在m_ids中是可以访问该版本的-->说明数据已经提交
