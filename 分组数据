@@ -1,0 +1,42 @@
+一.SQL数据分组GROUP  BY  &  HAVING
+	创建分组GROUP  BY，指示DBMS分组数据，然后对每个组而不是整个结果集进行聚集
+	1.  SELECT  vend_id,  COUNT(*)  AS  num_prods  FROM  products  GROUP  BY  vend_id;  --由于GROUP  BY, COUNT(*) 对每个vend_id而不是整个表计算num_prods一次
+注:   @GROUP  BY  子句可以包含任意的列，因而可以对分组进行嵌套，更细致的进行数据分组
+       @GROUP  BY  子句中列出每一列必须都是检索列或者有效表达式，但不能是聚集函数
+       @SELECT  子句中的每一列都必须在GROUP  BY  子句中给出
+
+	过滤分组HAVING，  WHERE有关所有的技术和选项都适用于HAVING，句法相同，关键字有别
+	2.  SELECT  cust_id,  COUNT(*)  AS  orders  FROM  Orders  GROUP  BY  cust_id  HAVING  COUNT(*)  >=  2;  --得到N个成员大于等于2的组
+	3.  SELECT  vend_id,  COUNT(*)  AS  num_prods  FROM  Products  WHERE  prod_price  >=  4  GROUP  BY  vend_id  HAVING  COUNT(*)  >=  2;
+	4.  SELECT  order_num,  COUNT(*)  AS  items  FROM  OrderItems  GROUP  BY  order_num  HAVING  COUNT(*)  >=  3  ORDER  BY  items,  order_num;
+注：WHERE在分组之前进行过滤，HAVING在分组之后进行过滤
+
+二.SELECT子句顺序
+	SELECT  >  FROM  >  WHERE  >  GROUP  BY  >  HAVING  >  ORDER  BY
+
+三.适用子查询（query）
+	子查询（subquery），即嵌套在其他查询中的查询
+	1.  SELECT  cust_id  FROM  Orders  WHERE  order_num  IN  (SELECT  order_num  FROM  OrderItems  WHERE  prod_id   =  'RGAN01');
+	2.  SELECT  cust_name,  cust_contact  FROM  Customer  WHERE  cust_id  IN  
+		(  SELECT  cust_id  FROM  Orders  WHERE  order_num  IN
+			(  SELECT  order_num  FROM  OrderItems  WHERE  prod_id  =  'RGAN01'  ));  
+注：在SELECT语句中，子查询总是由内向外缩进，且作为子查询的SELECT语句只能查询单个列，检索多个列将返回错误
+
+	作为计算字段使用子查询
+	3.  SELECT  cust_name,  cust_state,  (SELECT  COUNT(*)  FROM  Orders  WHERE  Orders.cust_id  =  Customer.cust_id)  AS  orders  FROM  Customers  ORDER  BY  cust_name;
+
+四.组合查询  UNION操作符
+	SQL允许执行多个查询（多条SELECT语句），并将结果作为一个查询结果集返回，这些组合查询通常称为并（union）或复合查询（compound  query），组合查询相当于多个WHERE条件
+	针对两种情况使用：
+		1.  在一个查询中从不同的表返回机构数据
+		2.  对一个表执行多个查询，按一个查询返回数据
+	3.  SELECT  cust_name,  cust_contact,  cust_email  FROM  Customers  WHERE  cust_state  IN  ('IL', 'IN', 'MI')
+	     UNION
+	     SELECT  cust_name,  cust_contact,  cust_email  FROM  Customers  WHERE  cust_name  =  'Fun4All';  --  一同出现，避免重复，自动取消重复的行
+	如果想要返回所有匹配行，可以使用UNION  ALL
+	4.  SELECT  cust_name,  cust_contact,  cust_email  FROM  Customers  WHERE  cust_state  IN  ('IL', 'IN', 'MI')
+	     UNION  ALL
+	     SELECT  cust_name,  cust_contact,  cust_email  FROM  Customers  WHERE  cust_name  =  'Fun4All';  --DBMS不取消重复的行，完成WHERE完成不了的操作
+	如果UNION语句的最后一句使用了ORDER  BY  那这种排序对所有SELECT语句返回都起作用
+	
+	
