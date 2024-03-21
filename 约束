@@ -1,0 +1,30 @@
+约束分类：
+	非空约束			NOT  NULL
+	唯一约束			UNIQUE
+	主键约束			PRIMARY  KEY  （AUTO_INCREMENT）
+	默认约束			DEFAULT
+	检查约束			CHECK		
+	外键约束			FOREIGN  KEY	-->让两张表之间建立连接
+	
+外键约束--》添加外键
+	方法一：
+		CREATE  TABLE  user
+		(
+			字段名	数据类型
+			......
+
+			[ CONSTRAINT ]  [外键名称]  FOREIGN  KEY  (外键字段)  REFERENCES  主表 (主表列名)      --》  [  ]中的内容可以省略
+
+			 CONSTRAINT  fk_emp_dept1  FOREIGN  KEY(deptId)  REFERENCES  tb_dept1(id)	
+
+			foreign key(uid) references class(xuehao)
+			on update cascade on delete cascade)engine=innodb;
+		);
+
+	方法二：
+	ALTER  TABLE  表名  ADD  CONSTRAINT  外键名称  FOREIGN  KEY  (外键字段)  REFERENCES  主表（主表列名）；
+	
+	常用外键约束行为：
+	CASCADE  -->  当在父表中删除/更新对应记录时，首先检查该记录是否有外键对应，如果有，则也删除/更新外键在子表中的记录
+
+	ALTER  TABLE  表名  ADD  CONSTRAINT  外键名称  FOREIGN  KEY  (外键字段)  REFERENCES  主表（主表列名）ON  UPDATE  CASCADE  ON  DELETE  CASCADE;
